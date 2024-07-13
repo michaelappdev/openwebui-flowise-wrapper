@@ -1,9 +1,11 @@
 const express = require('express');
 const axios = require('axios');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors()); // Enable CORS
 
 const FLOWISE_API_URL = process.env.FLOWISE_API_URL;
 const FLOWISE_API_KEY = process.env.FLOWISE_API_KEY;
@@ -11,15 +13,33 @@ const FLOWISE_API_KEY = process.env.FLOWISE_API_KEY;
 // In-memory store for conversation history
 const conversationHistory = {};
 
+// Function to generate a session ID
 function getSessionId(req) {
-  // Generate a session ID based on the client IP and a timestamp
   return req.ip + '-' + new Date().getTime();
 }
 
+// Function to summarize conversation history
 function summarizeHistory(history) {
-  // This is a simple summarization. You can enhance it to include more intelligent summarization.
   return history.map(entry => `${entry.role}: ${entry.content}`).join('\n');
 }
+
+// Handle /v1/models endpoint
+app.get('/v1/models', (req, res) => {
+  res.json({
+    object: 'list',
+    data: [
+      {
+        id: 'flowise-proxy',
+        object: 'model',
+        created: 0,
+        owned_by: 'flowise',
+        permission: [],
+        root: 'flowise-proxy',
+        parent: null
+      }
+    ]
+  });
+});
 
 // Middleware to transform OpenAI-style requests to Flowise and vice versa
 app.post('/v1/chat/completions', async (req, res) => {
