@@ -26,6 +26,12 @@ app.post('/v1/chat/completions', async (req, res) => {
       },
     });
 
+    // Log the entire Flowise response for debugging
+    console.log('Flowise Response:', flowiseResponse.data);
+
+    // Extract the relevant text from Flowise response
+    const responseContent = flowiseResponse.data.text || "No content received";
+
     // Transform Flowise response to OpenAI format
     const openAIResponse = {
       id: 'chatcmpl-' + Math.random().toString(36).substr(2, 9),
@@ -37,7 +43,7 @@ app.post('/v1/chat/completions', async (req, res) => {
           index: 0,
           message: {
             role: 'assistant',
-            content: flowiseResponse.data.result, // Adjust based on actual Flowise response structure
+            content: responseContent,
           },
           finish_reason: 'stop',
         },
