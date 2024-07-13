@@ -5,8 +5,8 @@ const bodyParser = require('body-parser');
 const app = express();
 app.use(bodyParser.json());
 
-const FLOWISE_API_URL = 'https://flowiseai-railway-production-a114.up.railway.app/api/v1/prediction/1f57dea6-78d2-4193-9324-e714412fac79';
-const FLOWISE_API_KEY = 'E382CRyxe4CuRb18kuL5R88F7wdsX1m_16eb6f6lF-w';
+const FLOWISE_API_URL = process.env.FLOWISE_API_URL;
+const FLOWISE_API_KEY = process.env.FLOWISE_API_KEY;
 
 // Middleware to transform OpenAI-style requests to Flowise and vice versa
 app.post('/v1/chat/completions', async (req, res) => {
