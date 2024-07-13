@@ -8,15 +8,46 @@ app.use(bodyParser.json());
 const FLOWISE_API_URL = process.env.FLOWISE_API_URL;
 const FLOWISE_API_KEY = process.env.FLOWISE_API_KEY;
 
+// In-memory store for conversation history
+const conversationHistory = {};
+
+function getSessionId(req) {
+  // Generate a session ID based on the client IP and a timestamp
+  return req.ip + '-' + new Date().getTime();
+}
+
+function summarizeHistory(history) {
+  // This is a simple summarization. You can enhance it to include more intelligent summarization.
+  return history.map(entry => `${entry.role}: ${entry.content}`).join('\n');
+}
+
 // Middleware to transform OpenAI-style requests to Flowise and vice versa
 app.post('/v1/chat/completions', async (req, res) => {
   try {
-    // Extract the message from the OpenAI-style request
+    // Extract the messages from the OpenAI-style request
     const { messages } = req.body;
-    const question = messages[messages.length - 1].content;
+    const userMessage = messages[messages.length - 1].content;
+
+    // Determine the session ID
+    const sessionId = getSessionId(req);
+
+    // Initialize or update the conversation history for this session
+    if (!conversationHistory[sessionId]) {
+      conversationHistory[sessionId] = [];
+    }
+    conversationHistory[sessionId].push({ role: 'user', content: userMessage });
+
+    // Summarize the conversation history to include in the request
+    const summarizedHistory = summarizeHistory(conversationHistory[sessionId]);
 
     // Prepare the data for Flowise
-    const flowiseData = { question };
+    const flowiseData = {
+      question: summarizedHistory,
+      overrideConfig: {
+        sessionId: sessionId,
+        memoryKey: sessionId,
+      }
+    };
 
     // Make a request to the Flowise endpoint
     const flowiseResponse = await axios.post(FLOWISE_API_URL, flowiseData, {
@@ -31,6 +62,9 @@ app.post('/v1/chat/completions', async (req, res) => {
 
     // Extract the relevant text from Flowise response
     const responseContent = flowiseResponse.data.text || "No content received";
+
+    // Update the conversation history with the assistant's response
+    conversationHistory[sessionId].push({ role: 'assistant', content: responseContent });
 
     // Transform Flowise response to OpenAI format
     const openAIResponse = {
@@ -53,6 +87,8 @@ app.post('/v1/chat/completions', async (req, res) => {
         completion_tokens: 0,
         total_tokens: 0,
       },
+      sessionId: sessionId,
+      memoryKey: sessionId,
     };
 
     res.json(openAIResponse);
