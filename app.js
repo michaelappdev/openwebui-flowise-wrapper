@@ -31,11 +31,8 @@ app.get('/v1/models', (req, res) => {
       {
         id: 'flowise-proxy',
         object: 'model',
-        created: 0,
-        owned_by: 'flowise',
-        permission: [],
-        root: 'flowise-proxy',
-        parent: null
+        created: Date.now(),
+        owned_by: 'flowise'
       }
     ]
   });
