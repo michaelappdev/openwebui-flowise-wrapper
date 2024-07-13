@@ -32,7 +32,19 @@ app.get('/v1/models', (req, res) => {
         id: 'flowise-proxy',
         object: 'model',
         created: 1715368132,
-        owned_by: 'system'
+        owned_by: 'flowise'
+      },
+      {
+        id: 'flowise-model-1',
+        object: 'model',
+        created: 1715368132,
+        owned_by: 'flowise'
+      },
+      {
+        id: 'flowise-model-2',
+        object: 'model',
+        created: 1715368132,
+        owned_by: 'flowise'
       }
     ]
   });
